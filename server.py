@@ -52,9 +52,13 @@ class BallotHandler(RequestHandler):
     def get_ballot(self, slug, id):
         ballot = self.application.ballots.find_one({"slug": slug})
         if ballot is None:
-            raise HTTPError(404)
+            raise HTTPError(404, 'not found')
 
-        #TODO do time checks for start and finish
+        now = datetime.datetime.utcnow()
+        if ballot['startTime'] is not None and ballot['startTime'] > now:
+            raise HTTPError(403, 'not started yet')
+        if ballot['endTime'] is not None and ballot['endTime'] < now:
+            raise HTTPError(403, 'has ended')
 
         id = uuid.UUID(id)
         token = self.application.ballots.find_one({
@@ -62,7 +66,7 @@ class BallotHandler(RequestHandler):
             "tokens._id": id
         }, fields=["tokens.$"])
         if token is None:
-            raise HTTPError(403)
+            raise HTTPError(403, 'no token')
         token = token['tokens'][0]
 
         if token.get('ballot') is not None:

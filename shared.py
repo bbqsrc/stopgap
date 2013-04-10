@@ -71,7 +71,7 @@ def update_html(slug, ballot_html):
     })
 
 
-def create_tokens_and_send_email(slug, dry_run=False):
+def create_tokens_and_send_email(slug, dry_run=False, force=False):
     elections = Connection().stopgap.elections
 
     election = elections.find_one({"slug": slug})
@@ -84,9 +84,10 @@ def create_tokens_and_send_email(slug, dry_run=False):
             unsent.append(o['email'])
 
     total_unsent = len(unsent)
-    res = input("Are you sure you want to send %s emails?\n[y/N]>" % total_unsent)
-    if res.lower() != "y":
-        return
+    if not force:
+        res = input("Are you sure you want to send %s emails?\n[y/N]>" % total_unsent)
+        if res.lower() != "y":
+            return
 
     for n, email in enumerate(unsent):
         sys.stdout.write("[%s/%s] %s... " % (n+1, total_unsent, email))

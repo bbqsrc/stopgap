@@ -84,17 +84,14 @@ class BallotHandler(RequestHandler):
 
     def get_arguments_as_json(self):
         o = {}
-        print(self.request.arguments)
         for name, value in self.request.arguments.items():
             chunks = re.split(r'[\]\[]+', name.strip(']'))
-            print(chunks)
             v = o
             for chunk in chunks[:-1]:
                 if v.get(chunk) is None:
                     v[chunk] = {}
                 v = v[chunk]
             v[chunks[-1]] = value[0].decode()
-        print(o)
         return o
 
     def get(self, slug, id):

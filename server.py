@@ -9,7 +9,10 @@ import logging
 from bson.json_util import dumps
 from pymongo import Connection
 from tornado.web import HTTPError, RequestHandler, StaticFileHandler
+from tornado.options import options, define
 
+define("port", default=8888, type=int)
+define("static", default="./static")
 
 def safe_modify(col, query, update, upsert=False):
     for attempt in range(5):
@@ -45,34 +48,39 @@ def safe_insert(collection, data):
 class Application(tornado.web.Application):
     def __init__(self, handlers, **settings):
         tornado.web.Application.__init__(self, handlers, **settings)
+        self.elections = Connection().stopgap.elections
         self.ballots = Connection().stopgap.ballots
 
 
 class BallotHandler(RequestHandler):
-    def get_ballot(self, slug, id):
-        ballot = self.application.ballots.find_one({"slug": slug})
-        if ballot is None:
-            raise HTTPError(404, 'not found')
+    def get_election(self, slug, id):
+        election = self.application.elections.find_one({"slug": slug})
+        if election is None:
+            self.write("No ballot found.")
+            return None, None
 
         now = datetime.datetime.utcnow()
-        if ballot['startTime'] is not None and ballot['startTime'] > now:
-            raise HTTPError(403, 'not started yet')
-        if ballot['endTime'] is not None and ballot['endTime'] < now:
-            raise HTTPError(403, 'has ended')
+        if election.get('startTime') is not None and election['startTime'] > now:
+            self.write("This ballot has not begun yet, sorry!")
+            return None, None
+            #raise HTTPError(403, 'not started yet')
+        if election.get('endTime') is not None and election['endTime'] < now:
+            self.write("This ballot has now finished, sorry!")
+            return None, None
+            #raise HTTPError(403, 'has ended')
 
-        id = uuid.UUID(id)
-        token = self.application.ballots.find_one({
-            "slug": slug,
-            "tokens._id": id
-        }, fields=["tokens.$"])
-        if token is None:
-            raise HTTPError(403, 'no token')
-        token = token['tokens'][0]
+        token = uuid.UUID(id)
+        if token not in election['tokens']:
+            self.write("Invalid token.")
+            return None, None
+            #raise HTTPError(403, 'no token')
 
-        if token.get('ballot') is not None:
-            raise HTTPError(409, "You have already filled this ballot.")
+        if self.application.ballots.find_one({"election_id": election['_id'], "token": token}):
+            self.write("You have already filled this ballot.")
+            return None, None
+            #raise HTTPError(409, "You have already filled this ballot.")
 
-        return ballot, token
+        return election, token
 
     def get_arguments_as_json(self):
         o = {}
@@ -90,57 +98,32 @@ class BallotHandler(RequestHandler):
         return o
 
     def get(self, slug, id):
-        ballot, token = self.get_ballot(slug, id)
-        self.write(ballot['html'])
+        election, token = self.get_election(slug, id)
+        if election is None:
+            return
+        self.write(election['html']['ballot'])
 
     def post(self, slug, id):
-        ballot, token = self.get_ballot(slug, id)
-        logging.debug(token)
-        safe_modify(self.application.ballots, {
-                "slug": slug,
-                "tokens._id": token["_id"]
-            }, {
-                "$set": {
-                    "tokens.$.ballot": self.get_arguments_as_json()
-                }
-            }
-        )
-
-
-def create_test_ballot():
-    ballots = Connection().stopgap.ballots
-    ballots.remove({"slug": "test"})
-    o = {
-        "slug": "test",
-        "html": """<!DOCTYPE html>
-        <html>
-        <head><title>Test</title></head>
-        <body>
-            <form method="post">
-                <input name="test"><br>
-                <input name="elections[test]"><br>
-                <input type="submit">
-            </form>
-        </body>
-        </html>""",
-        "participants": [{
-            "_id": uuid.uuid4(),
-            "email": "test@test.me"
-        }],
-        "tokens": [{
-            "_id": uuid.UUID("0" * 32)
-        },{
-            "_id": uuid.UUID("1" * 32)
-        }],
-        "startTime": datetime.datetime.utcnow()
-    }
-    ballots.insert(o)
+        election, token = self.get_election(slug, id)
+        if election is None:
+            return
+        o = {
+            "election_id": election['_id'],
+            "token": token,
+            "ballot": self.get_arguments_as_json()
+        }
+        res = safe_insert(self.application.ballots, o)
+        if res is False:
+            self.write(election['html']['failure'])
+            return
+        self.write(election['html']['success'])
 
 
 if __name__ == "__main__":
     tornado.options.parse_command_line()
     application = Application([
+        (r"/static/(.*)", StaticFileHandler, {"path": options.static}),
         (r"/(.*)/(.*)", BallotHandler)
     ])
-    application.listen(8888)
+    application.listen(options.port)
     tornado.ioloop.IOLoop.instance().start()

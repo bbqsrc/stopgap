@@ -65,6 +65,12 @@ def create_election(slug, userlist, ballot_html, success_html, failure_html, ema
     return safe_insert(elections, election)
 
 
+def add_email(slug, email):
+    safe_modify(Connection().stopgap.elections, {"slug": slug}, {
+        "$push": {"participants": {"email": email, "sent": False}}
+    })
+
+
 def update_html(slug, ballot_html):
     safe_modify(Connection().stopgap.elections, {"slug": slug}, {
         "$set": {"html.ballot": ballot_html.read()}

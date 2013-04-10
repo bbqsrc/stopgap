@@ -99,6 +99,7 @@ def create_tokens_and_send_email(slug, dry_run=False):
 
         mail = create_email(
                 frm=election['email']['from'],
+                subject=election['email']['subject'],
                 to=email,
                 text=election['email']['content'].format(
                     slug=slug,
@@ -107,7 +108,7 @@ def create_tokens_and_send_email(slug, dry_run=False):
         )
 
         if not dry_run:
-            #sendmail(mail)
+            sendmail(mail)
             res = safe_modify(elections, {"slug": slug, "participants.email": email},
                 {"$set": {"participants.$.sent": True}})
             if res is False:

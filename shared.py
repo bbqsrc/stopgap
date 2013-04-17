@@ -71,6 +71,12 @@ def add_email(slug, email):
     })
 
 
+def end_election(slug):
+    safe_modify(Connection().stopgap.elections, {"slug": slug}, {
+        "$set": {"endTime": datetime.datetime.utcnow()}
+    })
+
+
 def update_html(slug, ballot_html):
     safe_modify(Connection().stopgap.elections, {"slug": slug}, {
         "$set": {"html.ballot": ballot_html.read()}

@@ -75,7 +75,7 @@ def export_ballots(slug):
         raise Exception("No election with slug.")
 
     o = list(ballots.find({"election_id": election['_id']}))
-    return dumps({slug: o})
+    return dumps({slug: o}, indent=2)
 
 
 def add_email(slug, email):

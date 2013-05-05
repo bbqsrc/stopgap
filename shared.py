@@ -74,7 +74,7 @@ def export_ballots(slug):
     if election is None:
         raise Exception("No election with slug.")
 
-    o = list(ballots.find({"election_id": election['_id']))
+    o = list(ballots.find({"election_id": election['_id']}))
     return dumps({slug: o})
 
 

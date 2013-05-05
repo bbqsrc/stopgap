@@ -66,16 +66,19 @@ def create_election(slug, userlist, ballot_html, success_html, failure_html, ema
     return safe_insert(elections, election)
 
 
-def export_ballots(slug):
+def export_ballots(slugs):
     elections = Connection().stopgap.elections
     ballots = Connection().stopgap.ballots
 
-    election = elections.find_one({"slug": slug})
-    if election is None:
-        raise Exception("No election with slug.")
+    out = OrderedDict()
+    for slug in slugs:
+        election = elections.find_one({"slug": slug})
+        if election is None:
+            raise Exception("No election with slug.")
 
-    o = list(ballots.find({"election_id": election['_id']}))
-    return dumps({slug: o}, indent=2)
+        o = list(ballots.find({"election_id": election['_id']}))
+        out[slug] = o
+    return dumps(out, indent=2)
 
 
 def add_email(slug, email):

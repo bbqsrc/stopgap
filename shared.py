@@ -4,6 +4,7 @@ import datetime
 import sys
 
 from pymongo import Connection
+from bson import dumps
 from bbqutils.email import sendmail, create_email
 
 def safe_modify(col, query, update, upsert=False):
@@ -63,6 +64,18 @@ def create_election(slug, userlist, ballot_html, success_html, failure_html, ema
     # Convert into set to remove duplicates
     election['participants'] = [{"email": x.strip(), "sent": False} for x in set(userlist)]
     return safe_insert(elections, election)
+
+
+def export_ballots(slug):
+    elections = Connection().stopgap.elections
+    ballots = Connection().stopgap.ballots
+
+    election = elections.find_one({"slug": slug})
+    if election is None:
+        raise Exception("No election with slug.")
+
+    o = list(ballots.find({"election_id": election['_id']))
+    return dumps({slug: o})
 
 
 def add_email(slug, email):

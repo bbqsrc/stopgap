@@ -5,4 +5,4 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument('slugs', nargs='*')
     args = p.parse_args()
-    print(export_ballots(args.slug))
+    print(export_ballots(args.slugs))

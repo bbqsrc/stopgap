@@ -4,7 +4,7 @@ import datetime
 import sys
 
 from pymongo import Connection
-from bson import dumps
+from bson.json_util import dumps
 from bbqutils.email import sendmail, create_email
 
 def safe_modify(col, query, update, upsert=False):

@@ -83,6 +83,23 @@ def export_ballots(slugs):
     return dumps(out, indent=2)
 
 
+def export_elections(slugs, keep_participants=False):
+    elections = Connection().stopgap.elections
+
+    out = OrderedDict()
+    for slug in slugs:
+        election = elections.find_one({"slug": slug})
+        if election is None:
+            raise Exception("No election with slug.")
+
+        if not keep_participants:
+            # protect email addresses of participants
+            del election['participants']
+
+        out[slug] = election
+    return dumps(out, indent=2)
+
+
 def add_email(slug, email):
     safe_modify(Connection().stopgap.elections, {"slug": slug}, {
         "$push": {"participants": {"email": email, "sent": False}}

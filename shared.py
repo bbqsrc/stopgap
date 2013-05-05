@@ -3,6 +3,7 @@ import uuid
 import datetime
 import sys
 
+from collections import OrderedDict
 from pymongo import Connection
 from bson.json_util import dumps
 from bbqutils.email import sendmail, create_email
@@ -36,6 +37,7 @@ def safe_insert(collection, data):
             wait_t = 0.5 * pow(2, attempt)
             time.sleep(wait_t)
     return False
+
 
 def create_election(slug, userlist, ballot_html, success_html, failure_html, email, email_author, email_subject):
     elections = Connection().stopgap.elections

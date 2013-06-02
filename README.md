@@ -14,6 +14,34 @@ The voting system that had to be done.
 
 It is recommended that you put this system behind nginx or another HTTP daemon.
 
+## Installation
+
+Recommended operating system is Ubuntu LTS 12.04, and the installation instructions assume Ubuntu 12.04.
+
+### Dependencies
+
+```
+$ sudo apt-key adv --keyserver keyserver.ubuntu.com --recv 7F0CEB10
+$ echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | sudo tee /etc/apt/sources.list.d/10gen.list
+$ sudo apt-get update
+$ sudo apt-get install sendmail mongodb-10gen python3 python3-dev python3-setuptools build-essential
+$ sudo easy_install3 virtualenv
+$ virtualenv py32
+$ source py32/bin/activate
+$ pip install pymongo tornado bbqutils
+```
+
+### Running Stopgap
+
+```
+$ git clone https://github.com/bbqsrc/stopgap.git
+$ source py32/bin/activate
+$ cd stopgap
+$ python server.py --port=<port>
+```
+
+Ensure you have reverse DNS set up correctly and SPF records set on your DNS for the domain to ensure delivery of the token emails.
+
 ## Usage
 
 In essense, this system is merely a server that uses single-use tokens to take an HTTP POST of data from an end user for later processing as part of an election algorithm, for surveys, etc.
@@ -33,6 +61,8 @@ The slug is the identifier for your election such as `my-election-2013`.
 #### Create the ballot
 
 Create a HTML form for your ballots. It may take any form, as long as the final result is the user POSTing data to the same slug as was selected for the election.
+
+Dump any necessary dependencies (such as jQuery) into the static directory.
 
 As the output is JSON, the notation for the HTML form input fields is in a JSON-style notation. In order to create a structure like this:
 

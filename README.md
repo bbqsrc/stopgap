@@ -44,13 +44,13 @@ Ensure you have reverse DNS set up correctly and SPF records set on your DNS for
 
 ## Usage
 
-In essense, this system is merely a server that uses single-use tokens to take an HTTP POST of data from an end user for later processing as part of an election algorithm, for surveys, etc.
+In essense, this system is merely a server that uses single-use tokens to take an HTTP POST of data from a participant for later processing as part of an election algorithm, for surveys, etc.
 
 This system has two concepts: elections and ballots.
 
-An election consists of the ballot page, a successful ballot receipt page and an error page, with a user list that will be mailed unique keys for interacting with this election. The election has a start and end time, and you may add further users to the list and mail out keys to those users in the event that a user is missed.
+An election consists of the ballot page, a successful ballot receipt page and an error page, with a participant list that will be mailed unique keys for interacting with this election. The election has a start and end time, and you may add further participants to the list and mail out keys to those participants in the event that a participant is missed.
 
-A ballot is the user response to the election and is stored with a unique ID and linked to the election ID.
+A ballot is the participant response to the election and is stored with a unique ID and linked to the election ID.
 
 ### Creating an election
 
@@ -60,7 +60,7 @@ The slug is the identifier for your election such as `my-election-2013`.
 
 #### Create the ballot
 
-Create a HTML form for your ballots. It may take any form, as long as the final result is the user POSTing data to the same slug as was selected for the election.
+Create a HTML form for your ballots. It may take any form, as long as the final result is the participant POSTing data to the same slug as was selected for the election.
 
 Dump any necessary dependencies (such as jQuery) into the static directory.
 
@@ -88,11 +88,11 @@ One might make an HTML form such as:
 
 The backend will autogenerate missing parents, so `<input name='foo[bar][baz]'>` would be valid as well.
 
-#### Prepare your user list and email
+#### Prepare your participant list and email
 
-- The user list should consist of just email addresses each on their own line.
-- You will need to create an email template that will be used to inform users of their unique voting token.
-  - Your template must include a url that includes `/{slug}/{token}` such as `http://vote.tld/{slug}/{token}`
+- The participant list should consist of just email addresses each on their own line.
+- You will need to create an email template that will be used to inform participants of their unique voting token.
+  - Your template must include a URL that includes `/{slug}/{token}` such as `http://vote.tld/{slug}/{token}`
 
 #### Start the election
 
@@ -101,12 +101,12 @@ The backend will autogenerate missing parents, so `<input name='foo[bar][baz]'>`
 We create an election using the `create.py` script. For example:
 
 ```
-$ python create.py my-special-election users.txt ballot.html success.html error.html email.txt "Voting System <foo@bar.tld>" "Voting System Ballot: PLEASE VOTE!"
+$ python create.py my-special-election participants.txt ballot.html success.html error.html email.txt "Voting System <foo@bar.tld>" "Voting System Ballot: PLEASE VOTE!"
 ```
 
-Once you are prepared to mail out the tokens to the users, use the `send.py` script. You may opt to do a dry run using `-d`, and running this script will ask you to confirm that you wish to send the tokens out to the recipients before starting.
+Once you are prepared to mail out the tokens to the participants, use the `send.py` script. You may opt to do a dry run using `-d`, and running this script will ask you to confirm that you wish to send the tokens out to the recipients before starting.
 
-If you miss any users (it happens), you can add them at any time using the `add_email.py` script and running `send.py` again. `send.py` will not send the same token twice, as recipients are flagged as having had their token sent.
+If you miss any participants (it happens), you can add them at any time using the `add_email.py` script and running `send.py` again. `send.py` will not send the same token twice, as recipients are flagged as having had their token sent.
 
 Note: _Tokens are not linked to email addresses and therefore cannot be linked back to the email address._
 

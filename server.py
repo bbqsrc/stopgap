@@ -10,6 +10,7 @@ from bson.json_util import dumps
 from pymongo import Connection
 from tornado.web import HTTPError, RequestHandler, StaticFileHandler
 from tornado.options import options, define
+from collections import OrderedDict
 
 define("port", default=8888, type=int)
 define("static", default="./static")
@@ -83,13 +84,13 @@ class BallotHandler(RequestHandler):
         return election, token
 
     def get_arguments_as_json(self):
-        o = {}
+        o = OrderedDict()
         for name, value in self.request.arguments.items():
             chunks = re.split(r'[\]\[]+', name.strip(']'))
             v = o
             for chunk in chunks[:-1]:
                 if v.get(chunk) is None:
-                    v[chunk] = {}
+                    v[chunk] = OrderedDict()
                 v = v[chunk]
             v[chunks[-1]] = value[0].decode()
         return o
@@ -104,11 +105,11 @@ class BallotHandler(RequestHandler):
         election, token = self.get_election(slug, id)
         if election is None:
             return
-        o = {
-            "election_id": election['_id'],
-            "token": token,
-            "ballot": self.get_arguments_as_json()
-        }
+        o = OrderedDict([
+            ("election_id", election['_id']),
+            ("token", token),
+            ("ballot", self.get_arguments_as_json())
+        ])
         res = safe_insert(self.application.ballots, o)
         if res is False:
             self.write(election['html']['failure'])

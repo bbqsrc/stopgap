@@ -117,11 +117,16 @@ class BallotHandler(RequestHandler):
         self.write(election['html']['success'])
 
 
+class HomeHandler(StaticFileHandler):
+    def get(self):
+        super().get('index.html')
+
 if __name__ == "__main__":
     tornado.options.parse_command_line()
     application = Application([
         (r"/static/(.*)", StaticFileHandler, {"path": options.static}),
-        (r"/(.*)/(.*)", BallotHandler)
+        (r"/(.*)/(.*)", BallotHandler),
+        (r"/", HomeHandler, {"path": "."})
     ])
     application.listen(options.port)
     tornado.ioloop.IOLoop.instance().start()

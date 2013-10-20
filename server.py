@@ -86,7 +86,7 @@ class BallotHandler(RequestHandler):
     def get_arguments_as_json(self):
         o = OrderedDict()
         for name, value in self.request.arguments.items():
-            chunks = re.split(r'[\]\[]+', name.strip(']'))
+            chunks = re.split(r'[\]\[\.]+', name.strip(']'))
             v = o
             for chunk in chunks[:-1]:
                 if v.get(chunk) is None:
